@@ -1,4 +1,4 @@
-const defaultStages = [
+let stages = [
   {
     name: "Arrive",
     customer: "Enters restaurant",
@@ -92,355 +92,550 @@ const defaultStages = [
   }
 ];
 
-function createStages() {
+function renderStageEditor() {
 
   const container = document.getElementById("stages");
 
   container.innerHTML = "";
 
-  defaultStages.forEach((stage, index) => {
+  stages.forEach((stage, index) => {
 
     const html = `
       <div class="stage">
 
         <div class="stage-header">
-          <span>
+
+          <button
+            type="button"
+            class="stage-toggle"
+            onclick="toggleStage(${index})">
+
             <span class="stage-number">
               ${String(index + 1).padStart(2, "0")}
             </span>
-            Stage
-          </span>
+
+            <span class="stage-title">
+              ${escapeHTML(stage.name || "Untitled Stage")}
+            </span>
+
+            <span class="stage-arrow" id="arrow-${index}">
+              ▼
+            </span>
+
+          </button>
+
+          <button
+            type="button"
+            class="delete-stage"
+            onclick="deleteStage(${index})">
+
+            ×
+
+          </button>
+
         </div>
 
-        <div class="stage-body">
+        <div
+          class="stage-body"
+          id="stage-body-${index}">
 
-          <div class="field">
-            <label>Stage Name</label>
-            <input data-field="name" value="${stage.name}">
-          </div>
+          ${stageField(index, "name", "Stage Name", stage.name)}
 
-          <div class="field">
-            <label>Customer Action</label>
-            <input data-field="customer" value="${stage.customer}">
-          </div>
+          ${stageField(index, "customer", "Customer Action", stage.customer)}
 
-          <div class="field">
-            <label>Customer Emotion</label>
-            <input data-field="emotion" value="${stage.emotion}">
-          </div>
+          ${stageField(index, "emotion", "Customer Emotion", stage.emotion)}
 
-          <div class="field">
-            <label>Process Time (seconds)</label>
-            <input data-field="process" type="number" value="${stage.process}">
-          </div>
+          ${stageField(index, "process", "Process Time (seconds)", stage.process, "number")}
 
-          <div class="field">
-            <label>Wait Time / Delay (seconds)</label>
-            <input data-field="wait" type="number" value="${stage.wait}">
-          </div>
+          ${stageField(index, "wait", "Wait Time / Delay (seconds)", stage.wait, "number")}
 
-          <div class="field">
-            <label>Delay Reason</label>
-            <input data-field="delay" value="${stage.delay}">
-          </div>
+          ${stageField(index, "delay", "Delay Reason", stage.delay)}
 
-          <div class="field">
-            <label>Frontstage Action</label>
-            <input data-field="frontstage" value="${stage.frontstage}">
-          </div>
+          ${stageField(index, "frontstage", "Frontstage Action", stage.frontstage)}
 
-          <div class="field">
-            <label>Backstage Action</label>
-            <input data-field="backstage" value="${stage.backstage}">
-          </div>
+          ${stageField(index, "backstage", "Backstage Action", stage.backstage)}
 
-          <div class="field">
-            <label>Systems & Processes</label>
-            <input data-field="systems" value="${stage.systems}">
-          </div>
+          ${stageField(index, "systems", "Systems & Processes", stage.systems)}
 
-          <div class="field">
-            <label>Role / Department</label>
-            <input data-field="role" value="${stage.role}">
-          </div>
+          ${stageField(index, "role", "Role / Department", stage.role)}
 
-          <div class="field">
-            <label>Success KPI / Metric</label>
-            <input data-field="kpi" value="${stage.kpi}">
-          </div>
+          ${stageField(index, "kpi", "Success KPI / Metric", stage.kpi)}
 
         </div>
 
       </div>
     `;
 
-    container.insertAdjacentHTML("beforeend", html);
+    container.insertAdjacentHTML(
+      "beforeend",
+      html
+    );
 
   });
 
 }
 
-function getStages() {
+function stageField(
+  index,
+  field,
+  label,
+  value,
+  type = "text"
+) {
 
-  const stageElements =
-    document.querySelectorAll(".stage");
+  return `
+    <div class="field">
 
-  return Array.from(stageElements).map(stage => {
+      <label>${label}</label>
 
-    const get = field =>
-      stage.querySelector(`[data-field="${field}"]`).value;
+      <input
+        type="${type}"
+        data-stage="${index}"
+        data-field="${field}"
+        value="${escapeAttribute(value)}"
+        oninput="updateStage(${index}, '${field}', this.value)"
+      >
 
-    return {
-      name: get("name"),
-      customer: get("customer"),
-      emotion: get("emotion"),
-      process: Number(get("process")) || 0,
-      wait: Number(get("wait")) || 0,
-      delay: get("delay"),
-      frontstage: get("frontstage"),
-      backstage: get("backstage"),
-      systems: get("systems"),
-      role: get("role"),
-      kpi: get("kpi")
-    };
+    </div>
+  `;
 
+}
+
+function updateStage(
+  index,
+  field,
+  value
+) {
+
+  if (!stages[index]) return;
+
+  if (
+    field === "process" ||
+    field === "wait"
+  ) {
+
+    stages[index][field] =
+      Number(value) || 0;
+
+  } else {
+
+    stages[index][field] =
+      value;
+
+  }
+
+  if (field === "name") {
+
+    const title =
+      document.querySelector(
+        `.stage:nth-child(${index + 1}) .stage-title`
+      );
+
+    if (title) {
+      title.textContent =
+        value || "Untitled Stage";
+    }
+
+  }
+
+}
+
+function addStage() {
+
+  stages.push({
+    name: `Stage ${stages.length + 1}`,
+    customer: "",
+    emotion: "",
+    process: 0,
+    wait: 0,
+    delay: "",
+    frontstage: "",
+    backstage: "",
+    systems: "",
+    role: "",
+    kpi: ""
   });
+
+  renderStageEditor();
+
+  const lastStage =
+    document.querySelector(
+      `.stage:last-child`
+    );
+
+  if (lastStage) {
+    lastStage.scrollIntoView({
+      behavior: "smooth",
+      block: "center"
+    });
+  }
+
+}
+
+function deleteStage(index) {
+
+  if (stages.length <= 1) {
+
+    alert(
+      "You need at least one journey stage."
+    );
+
+    return;
+
+  }
+
+  stages.splice(index, 1);
+
+  renderStageEditor();
+
+}
+
+function toggleStage(index) {
+
+  const body =
+    document.getElementById(
+      `stage-body-${index}`
+    );
+
+  const arrow =
+    document.getElementById(
+      `arrow-${index}`
+    );
+
+  if (!body) return;
+
+  const isOpen =
+    body.style.display !== "none";
+
+  body.style.display =
+    isOpen ? "none" : "block";
+
+  arrow.textContent =
+    isOpen ? "▶" : "▼";
 
 }
 
 function generateBlueprint() {
 
   const project =
-    document.getElementById("projectName").value;
+    document.getElementById(
+      "projectName"
+    ).value;
 
   const service =
-    document.getElementById("service").value;
+    document.getElementById(
+      "service"
+    ).value;
 
   const target =
-    document.getElementById("target").value;
+    document.getElementById(
+      "target"
+    ).value;
 
   const targetTime =
-    Number(document.getElementById("targetTime").value) || 0;
+    Number(
+      document.getElementById(
+        "targetTime"
+      ).value
+    ) || 0;
 
-  const stages = getStages();
-
-  document.getElementById("previewProject").textContent =
+  document.getElementById(
+    "previewProject"
+  ).textContent =
     project;
 
-  document.getElementById("previewService").textContent =
+  document.getElementById(
+    "previewService"
+  ).textContent =
     service;
 
-  document.getElementById("previewTarget").textContent =
+  document.getElementById(
+    "previewTarget"
+  ).textContent =
     target;
 
-  document.getElementById("clockLabel").textContent =
-    `⟵ ${targetTime} seconds target clock ⟶`;
+  document.getElementById(
+    "clockLabel"
+  ).textContent =
+    `⟵ ${targetTime}s target clock ⟶`;
 
-  buildTable(stages);
+  buildTable();
+
 }
 
-function buildTable(stages) {
+function buildTable() {
 
   const headers =
-    document.getElementById("stageHeaders");
+    document.getElementById(
+      "stageHeaders"
+    );
 
   headers.innerHTML =
     `<th>Blueprint layer</th>` +
-    stages.map((stage, index) => `
-      <th>
-        <span class="step-num">
-          ${String(index + 1).padStart(2, "0")}
-        </span>
 
-        <span class="step">
-          ${escapeHTML(stage.name)}
-        </span>
-      </th>
-    `).join("");
+    stages.map(
+      (stage, index) => `
 
-  const rows = {
+        <th>
 
-    customerActions: stages.map(stage =>
+          <span class="step-num">
+            ${String(index + 1).padStart(2, "0")}
+          </span>
+
+          <span class="step">
+            ${escapeHTML(stage.name)}
+          </span>
+
+        </th>
+
+      `
+    ).join("");
+
+  document.getElementById(
+    "customerActions"
+  ).innerHTML =
+    stages.map(stage =>
       `<td>
         <div class="cell">
           ${escapeHTML(stage.customer)}
         </div>
       </td>`
-    ),
+    ).join("");
 
-    emotions: stages.map(stage =>
+  document.getElementById(
+    "emotions"
+  ).innerHTML =
+    stages.map(stage =>
       `<td>
         <div class="cell emotion">
           ${escapeHTML(stage.emotion)}
         </div>
       </td>`
-    ),
+    ).join("");
 
-    processTimes: stages.map(stage =>
-      `<td>
-        <div class="time-cell process">
+  document.getElementById(
+    "processTimes"
+  ).innerHTML =
+    stages.map(stage => {
 
-          <div class="time-row">
-            <span class="time-number">
-              ${stage.process}s
-            </span>
-          </div>
+      const width =
+        Math.min(
+          stage.process * 4,
+          120
+        );
 
-          <div class="bar-track">
-            <div
-              class="bar"
-              style="width:${stage.process * 4}px">
+      return `
+        <td>
+
+          <div class="time-cell process">
+
+            <div class="time-row">
+              <span class="time-number">
+                ${stage.process}s
+              </span>
             </div>
-          </div>
 
-        </div>
-      </td>`
-    ),
+            <div class="bar-track">
 
-    waitTimes: stages.map(stage =>
-      `<td>
+              <div
+                class="bar"
+                style="width:${width}px">
+              </div>
 
-        <div class="time-cell wait">
-
-          <div class="time-row">
-            <span class="time-number ${
-              stage.wait === 0 ? "zero" : ""
-            }">
-              ${stage.wait}s
-            </span>
-          </div>
-
-          <div class="bar-track">
-            <div
-              class="bar"
-              style="width:${stage.wait * 4}px">
             </div>
+
           </div>
 
-          ${
-            stage.delay
-              ? `<span class="tag">
-                   ${escapeHTML(stage.delay)}
-                 </span>`
-              : ""
-          }
+        </td>
+      `;
 
-        </div>
+    }).join("");
 
-      </td>`
-    ),
+  document.getElementById(
+    "waitTimes"
+  ).innerHTML =
+    stages.map(stage => {
 
-    frontstage: stages.map(stage =>
+      const width =
+        Math.min(
+          stage.wait * 4,
+          120
+        );
+
+      return `
+        <td>
+
+          <div class="time-cell wait">
+
+            <div class="time-row">
+
+              <span class="time-number ${
+                stage.wait === 0
+                  ? "zero"
+                  : ""
+              }">
+
+                ${stage.wait}s
+
+              </span>
+
+            </div>
+
+            <div class="bar-track">
+
+              <div
+                class="bar"
+                style="width:${width}px">
+              </div>
+
+            </div>
+
+            ${
+              stage.delay
+                ? `
+                  <span class="tag">
+                    ${escapeHTML(stage.delay)}
+                  </span>
+                `
+                : ""
+            }
+
+          </div>
+
+        </td>
+      `;
+
+    }).join("");
+
+  document.getElementById(
+    "frontstage"
+  ).innerHTML =
+    stages.map(stage =>
       `<td>
         <div class="cell">
           ${escapeHTML(stage.frontstage)}
         </div>
       </td>`
-    ),
+    ).join("");
 
-    backstage: stages.map(stage =>
+  document.getElementById(
+    "backstage"
+  ).innerHTML =
+    stages.map(stage =>
       `<td>
         <div class="cell">
           ${escapeHTML(stage.backstage)}
         </div>
       </td>`
-    ),
+    ).join("");
 
-    systems: stages.map(stage =>
+  document.getElementById(
+    "systems"
+  ).innerHTML =
+    stages.map(stage =>
       `<td>
         <div class="cell">
           ${escapeHTML(stage.systems)}
         </div>
       </td>`
-    ),
+    ).join("");
 
-    roles: stages.map(stage =>
+  document.getElementById(
+    "roles"
+  ).innerHTML =
+    stages.map(stage =>
       `<td>
         <div class="cell">
           ${escapeHTML(stage.role)}
         </div>
       </td>`
-    ),
+    ).join("");
 
-    kpis: stages.map(stage =>
+  document.getElementById(
+    "kpis"
+  ).innerHTML =
+    stages.map(stage =>
       `<td>
         <div class="cell">
           ${escapeHTML(stage.kpi)}
         </div>
       </td>`
-    )
+    ).join("");
 
-  };
-
-  Object.keys(rows).forEach(id => {
-
-    const row =
-      document.getElementById(id);
-
-    if (row) {
-      row.innerHTML =
-        rows[id].join("");
-    }
-
-  });
-
-  calculateTotals(stages);
+  calculateTotals();
 
 }
 
-function calculateTotals(stages) {
+function calculateTotals() {
 
   const totalProcess =
     stages.reduce(
-      (sum, stage) => sum + stage.process,
+      (sum, stage) =>
+        sum + Number(stage.process || 0),
       0
     );
 
   const totalWait =
     stages.reduce(
-      (sum, stage) => sum + stage.wait,
+      (sum, stage) =>
+        sum + Number(stage.wait || 0),
       0
     );
 
   const totalLead =
     totalProcess + totalWait;
 
-  document.getElementById("totalProcess").textContent =
+  document.getElementById(
+    "totalProcess"
+  ).textContent =
     `${totalProcess}s`;
 
-  document.getElementById("totalWait").textContent =
+  document.getElementById(
+    "totalWait"
+  ).textContent =
     `${totalWait}s`;
 
-  document.getElementById("totalLead").textContent =
+  document.getElementById(
+    "totalLead"
+  ).textContent =
     `${totalLead}s`;
 
-  calculateTarget(stages);
+  calculateTarget();
 
-  createWasteHotspot(stages);
+  createWasteHotspot();
+
 }
 
-function calculateTarget(stages) {
+function calculateTarget() {
 
   const targetTime =
     Number(
-      document.getElementById("targetTime").value
+      document.getElementById(
+        "targetTime"
+      ).value
     ) || 0;
 
   const clockStages =
-    getClockStages(stages);
+    getClockStages();
 
   const clockTime =
     clockStages.reduce(
       (sum, stage) =>
-        sum + stage.process + stage.wait,
+        sum +
+        Number(stage.process || 0) +
+        Number(stage.wait || 0),
       0
     );
 
   const verdict =
-    document.getElementById("verdict");
+    document.getElementById(
+      "verdict"
+    );
 
   const verdictText =
-    document.getElementById("verdictText");
+    document.getElementById(
+      "verdictText"
+    );
 
   if (clockTime <= targetTime) {
 
@@ -466,11 +661,13 @@ function calculateTarget(stages) {
 
 }
 
-function getClockStages(stages) {
+function getClockStages() {
 
   const names =
     stages.map(stage =>
-      stage.name.toLowerCase()
+      stage.name
+        .toLowerCase()
+        .trim()
     );
 
   const start =
@@ -493,15 +690,21 @@ function getClockStages(stages) {
   }
 
   return stages;
+
 }
 
-function createWasteHotspot(stages) {
+function createWasteHotspot() {
 
   const sorted =
     [...stages]
-      .filter(stage => stage.wait > 0)
+      .filter(
+        stage =>
+          Number(stage.wait || 0) > 0
+      )
       .sort(
-        (a, b) => b.wait - a.wait
+        (a, b) =>
+          Number(b.wait || 0) -
+          Number(a.wait || 0)
       );
 
   const output =
@@ -515,6 +718,7 @@ function createWasteHotspot(stages) {
       "No waiting time has been identified in the journey.";
 
     return;
+
   }
 
   const largest =
@@ -543,20 +747,43 @@ function createWasteHotspot(stages) {
 
   text += ".";
 
-  output.textContent = text;
+  output.textContent =
+    text;
+
 }
 
 function escapeHTML(value) {
 
-  return String(value)
-    .replace(/&/g, "&amp;")
-    .replace(/</g, "&lt;")
-    .replace(/>/g, "&gt;")
-    .replace(/"/g, "&quot;")
-    .replace(/'/g, "&#039;");
+  return String(value ?? "")
+    .replace(
+      /&/g,
+      "&amp;"
+    )
+    .replace(
+      /</g,
+      "&lt;"
+    )
+    .replace(
+      />/g,
+      "&gt;"
+    )
+    .replace(
+      /"/g,
+      "&quot;"
+    )
+    .replace(
+      /'/g,
+      "&#039;"
+    );
 
 }
 
-createStages();
+function escapeAttribute(value) {
+
+  return escapeHTML(value);
+
+}
+
+renderStageEditor();
 
 generateBlueprint();
