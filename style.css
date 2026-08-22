@@ -255,7 +255,7 @@ thead th:first-child {
 }
 
 thead th:not(:first-child) {
-  width: 130px;
+  width: auto;
 }
 
 .step-num {
