@@ -478,3 +478,34 @@ tbody th {
 .stage-header {
   gap: 8px;
 }
+.table-wrap {
+  width: 100%;
+  overflow-x: auto;
+}
+
+.table-wrap table {
+  width: 100%;
+  border-collapse: collapse;
+  table-layout: fixed;
+}
+
+.table-wrap th,
+.table-wrap td {
+  border: 1px solid #ddd;
+  padding: 10px;
+  vertical-align: top;
+  text-align: left;
+}
+
+.table-wrap thead th:first-child,
+.table-wrap tbody th {
+  width: 150px;
+}
+
+.table-wrap thead th {
+  font-weight: 700;
+}
+
+.table-wrap tbody th {
+  font-weight: 700;
+}
