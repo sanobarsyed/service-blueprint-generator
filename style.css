@@ -250,8 +250,8 @@ thead th {
   height: 70px;
 }
 
-thead th:first-child {
-  width: 145px;
+thead th:not(:first-child) {
+  width: auto;
 }
 
 thead th:not(:first-child) {
