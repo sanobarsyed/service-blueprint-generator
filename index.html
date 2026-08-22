@@ -1,0 +1,1090 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+
+  <title>Service Blueprint Generator</title>
+
+  <style>
+    * {
+      box-sizing: border-box;
+    }
+
+    body {
+      margin: 0;
+      font-family: Arial, Helvetica, sans-serif;
+      background: #f4f5f7;
+      color: #171717;
+    }
+
+    .app {
+      max-width: 1600px;
+      margin: 0 auto;
+      padding: 32px;
+    }
+
+    .header {
+      margin-bottom: 24px;
+    }
+
+    .header h1 {
+      margin: 0 0 8px;
+      font-size: 32px;
+    }
+
+    .header p {
+      margin: 0;
+      color: #666;
+      font-size: 15px;
+    }
+
+    .layout {
+      display: grid;
+      grid-template-columns: 380px 1fr;
+      gap: 24px;
+      align-items: start;
+    }
+
+    .panel {
+      background: #fff;
+      border: 1px solid #ddd;
+      border-radius: 12px;
+      padding: 24px;
+      box-shadow: 0 2px 8px rgba(0,0,0,0.04);
+    }
+
+    .panel h2 {
+      margin: 0 0 20px;
+      font-size: 18px;
+    }
+
+    .field {
+      margin-bottom: 16px;
+    }
+
+    .field label {
+      display: block;
+      margin-bottom: 7px;
+      font-size: 13px;
+      font-weight: 700;
+    }
+
+    input,
+    textarea,
+    select {
+      width: 100%;
+      border: 1px solid #ccc;
+      border-radius: 7px;
+      padding: 10px 11px;
+      font-size: 14px;
+      font-family: inherit;
+      background: #fff;
+    }
+
+    textarea {
+      min-height: 70px;
+      resize: vertical;
+    }
+
+    input:focus,
+    textarea:focus,
+    select:focus {
+      outline: none;
+      border-color: #111;
+    }
+
+    .stage {
+      border: 1px solid #ddd;
+      border-radius: 10px;
+      margin-bottom: 14px;
+      overflow: hidden;
+    }
+
+    .stage-header {
+      background: #f7f7f7;
+      padding: 12px;
+      font-weight: 700;
+      display: flex;
+      justify-content: space-between;
+      align-items: center;
+    }
+
+    .stage-number {
+      font-size: 12px;
+      color: #777;
+      margin-right: 5px;
+    }
+
+    .stage-body {
+      padding: 14px;
+    }
+
+    .stage-body .field:last-child {
+      margin-bottom: 0;
+    }
+
+    .button {
+      width: 100%;
+      border: 0;
+      border-radius: 8px;
+      padding: 13px 16px;
+      font-size: 14px;
+      font-weight: 700;
+      cursor: pointer;
+      margin-top: 8px;
+    }
+
+    .button-primary {
+      background: #111;
+      color: #fff;
+    }
+
+    .button-secondary {
+      background: #eee;
+      color: #111;
+    }
+
+    .button:hover {
+      opacity: 0.88;
+    }
+
+    .preview {
+      min-width: 0;
+    }
+
+    .blueprint {
+      background: white;
+      border: 1px solid #ddd;
+      border-radius: 12px;
+      padding: 28px;
+      overflow-x: auto;
+    }
+
+    .blueprint-title {
+      margin-bottom: 20px;
+    }
+
+    .blueprint-title h2 {
+      margin: 0 0 6px;
+      font-size: 26px;
+    }
+
+    .blueprint-title p {
+      margin: 0;
+      color: #666;
+      font-size: 13px;
+    }
+
+    .meta {
+      display: grid;
+      grid-template-columns: repeat(3, 1fr);
+      border-top: 1px solid #ddd;
+      border-bottom: 1px solid #ddd;
+      margin-bottom: 18px;
+    }
+
+    .meta-item {
+      padding: 14px;
+      border-right: 1px solid #ddd;
+    }
+
+    .meta-item:last-child {
+      border-right: none;
+    }
+
+    .meta-label {
+      font-size: 10px;
+      text-transform: uppercase;
+      letter-spacing: 1px;
+      color: #777;
+      margin-bottom: 6px;
+      font-weight: 700;
+    }
+
+    .meta-value {
+      font-size: 13px;
+      line-height: 1.4;
+    }
+
+    .bracket {
+      display: grid;
+      grid-template-columns: 1fr 1fr;
+      margin-bottom: 10px;
+      text-align: center;
+      font-size: 11px;
+      color: #777;
+    }
+
+    .bracket-label {
+      grid-column: 1 / -1;
+      padding: 5px;
+      border-bottom: 1px solid #aaa;
+    }
+
+    table {
+      width: 100%;
+      border-collapse: collapse;
+      min-width: 950px;
+      table-layout: fixed;
+    }
+
+    th,
+    td {
+      border: 1px solid #ddd;
+      padding: 8px;
+      vertical-align: top;
+      text-align: left;
+    }
+
+    thead th {
+      background: #f7f7f7;
+      height: 70px;
+    }
+
+    thead th:first-child {
+      width: 145px;
+    }
+
+    thead th:not(:first-child) {
+      width: 130px;
+    }
+
+    .step-num {
+      display: block;
+      font-size: 10px;
+      color: #888;
+      margin-bottom: 5px;
+    }
+
+    .step {
+      font-size: 13px;
+    }
+
+    tbody th {
+      font-size: 11px;
+      background: #fafafa;
+      font-weight: 700;
+    }
+
+    .cell {
+      font-size: 11px;
+      line-height: 1.4;
+      min-height: 28px;
+    }
+
+    .emotion {
+      font-style: italic;
+    }
+
+    .clock {
+      background: #fffdf5;
+    }
+
+    .group-journey th {
+      border-top: 2px solid #111;
+    }
+
+    .group-value th {
+      background: #f5f5f5;
+    }
+
+    .group-front th {
+      background: #f1f6ff;
+    }
+
+    .group-back th {
+      background: #f5f1ff;
+    }
+
+    .group-owner th {
+      background: #f1f8f3;
+    }
+
+    .group-divider th,
+    .group-divider td {
+      border-top: 2px solid #111;
+    }
+
+    .time-cell {
+      min-height: 50px;
+    }
+
+    .time-row {
+      display: flex;
+      justify-content: space-between;
+      margin-bottom: 5px;
+    }
+
+    .time-number {
+      font-size: 11px;
+      font-weight: 700;
+    }
+
+    .time-number.zero {
+      color: #999;
+    }
+
+    .bar-track {
+      height: 5px;
+      background: #eee;
+      border-radius: 5px;
+      overflow: hidden;
+    }
+
+    .bar {
+      height: 100%;
+      background: #111;
+      border-radius: 5px;
+    }
+
+    .tag {
+      display: inline-block;
+      margin-top: 6px;
+      padding: 3px 5px;
+      border-radius: 4px;
+      background: #eee;
+      font-size: 9px;
+    }
+
+    .footer {
+      margin-top: 20px;
+    }
+
+    .cards {
+      display: grid;
+      grid-template-columns: repeat(4, 1fr);
+      gap: 10px;
+    }
+
+    .card {
+      border: 1px solid #ddd;
+      padding: 14px;
+      background: #fafafa;
+    }
+
+    .card-label {
+      font-size: 9px;
+      text-transform: uppercase;
+      letter-spacing: 1px;
+      color: #777;
+      margin-bottom: 6px;
+    }
+
+    .card-value {
+      font-size: 22px;
+      font-weight: 700;
+      margin-bottom: 5px;
+    }
+
+    .card-sub {
+      font-size: 10px;
+      color: #666;
+      line-height: 1.4;
+    }
+
+    .note {
+      margin-top: 12px;
+      padding: 14px;
+      border-left: 3px solid #111;
+      background: #fafafa;
+      font-size: 12px;
+      line-height: 1.5;
+    }
+
+    .credit {
+      margin-top: 16px;
+      text-align: right;
+      font-size: 10px;
+      color: #888;
+    }
+
+    @media (max-width: 1100px) {
+      .layout {
+        grid-template-columns: 1fr;
+      }
+
+      .cards {
+        grid-template-columns: repeat(2, 1fr);
+      }
+    }
+
+    @media (max-width: 600px) {
+      .app {
+        padding: 16px;
+      }
+
+      .meta {
+        grid-template-columns: 1fr;
+      }
+
+      .meta-item {
+        border-right: none;
+        border-bottom: 1px solid #ddd;
+      }
+
+      .meta-item:last-child {
+        border-bottom: none;
+      }
+
+      .cards {
+        grid-template-columns: 1fr;
+      }
+    }
+  </style>
+</head>
+
+<body>
+
+<div class="app">
+
+  <div class="header">
+    <h1>Service Blueprint Generator</h1>
+    <p>Create reusable service blueprints for different products, services and customer journeys.</p>
+  </div>
+
+  <div class="layout">
+
+    <!-- FORM -->
+    <div class="panel">
+
+      <h2>Blueprint Input</h2>
+
+      <div class="field">
+        <label>Project / Company</label>
+        <input id="projectName" value="McDonald's">
+      </div>
+
+      <div class="field">
+        <label>Service</label>
+        <input id="service" value="Counter / kiosk quick-service order fulfilment">
+      </div>
+
+      <div class="field">
+        <label>Target</label>
+        <input id="target" value="Every order delivered in under 30s, measured from Order → Collect">
+      </div>
+
+      <div class="field">
+        <label>Target Time (seconds)</label>
+        <input id="targetTime" type="number" value="30">
+      </div>
+
+      <h2>Journey Stages</h2>
+
+      <div id="stages"></div>
+
+      <button class="button button-primary" onclick="generateBlueprint()">
+        Generate Blueprint
+      </button>
+
+      <button class="button button-secondary" onclick="window.print()">
+        Print / Save PDF
+      </button>
+
+    </div>
+
+    <!-- PREVIEW -->
+    <div class="preview">
+
+      <div class="blueprint">
+
+        <div class="blueprint-title">
+          <h2 id="previewProject">McDonald's</h2>
+          <p>Service Blueprint — Value Map</p>
+        </div>
+
+        <div class="meta">
+
+          <div class="meta-item">
+            <div class="meta-label">Service</div>
+            <div class="meta-value" id="previewService"></div>
+          </div>
+
+          <div class="meta-item">
+            <div class="meta-label">Target</div>
+            <div class="meta-value" id="previewTarget"></div>
+          </div>
+
+          <div class="meta-item">
+            <div class="meta-label">Reads</div>
+            <div class="meta-value">Steps → &nbsp;·&nbsp; Layers ↓</div>
+          </div>
+
+        </div>
+
+        <div class="bracket">
+          <div></div>
+          <div></div>
+          <div class="bracket-label" id="clockLabel">
+            ⟵ Target clock ⟶
+          </div>
+        </div>
+
+        <table>
+
+          <thead>
+            <tr id="stageHeaders">
+              <th>Blueprint layer</th>
+            </tr>
+          </thead>
+
+          <tbody>
+
+            <tr class="group-journey">
+              <th>Customer action</th>
+              <div id="customerActions"></div>
+            </tr>
+
+            <tr class="group-journey">
+              <th>Customer emotion</th>
+              <div id="emotions"></div>
+            </tr>
+
+            <tr class="group-value">
+              <th>Process Time</th>
+              <div id="processTimes"></div>
+            </tr>
+
+            <tr class="group-value">
+              <th>Wait Time / Delay</th>
+              <div id="waitTimes"></div>
+            </tr>
+
+            <tr class="group-front group-divider">
+              <th>Frontstage actions</th>
+              <div id="frontstage"></div>
+            </tr>
+
+            <tr class="group-back">
+              <th>Backstage actions</th>
+              <div id="backstage"></div>
+            </tr>
+
+            <tr class="group-back">
+              <th>Systems &amp; Processes</th>
+              <div id="systems"></div>
+            </tr>
+
+            <tr class="group-owner group-divider">
+              <th>Role / Department</th>
+              <div id="roles"></div>
+            </tr>
+
+            <tr class="group-owner">
+              <th>Success KPI / Metric</th>
+              <div id="kpis"></div>
+            </tr>
+
+          </tbody>
+
+        </table>
+
+        <div class="footer">
+
+          <div class="cards">
+
+            <div class="card">
+              <div class="card-label">Total Process Time</div>
+              <div class="card-value" id="totalProcess">0s</div>
+              <div class="card-sub">Value-add activity across journey</div>
+            </div>
+
+            <div class="card">
+              <div class="card-label">Total Wait Time</div>
+              <div class="card-value" id="totalWait">0s</div>
+              <div class="card-sub">Non-value-add delay across journey</div>
+            </div>
+
+            <div class="card">
+              <div class="card-label">Total Lead Time</div>
+              <div class="card-value" id="totalLead">0s</div>
+              <div class="card-sub">Process + wait across full journey</div>
+            </div>
+
+            <div class="card verdict">
+              <div class="card-label">vs. TARGET</div>
+              <div class="card-value" id="verdict">—</div>
+              <div class="card-sub" id="verdictText"></div>
+            </div>
+
+          </div>
+
+          <div class="note">
+            <strong>Waste hotspots:</strong>
+            <span id="wasteHotspots">Enter your journey data to identify the largest delays.</span>
+          </div>
+
+          <div class="credit">
+            <span>Service blueprint — Value map by Codewave</span>
+          </div>
+
+        </div>
+
+      </div>
+
+    </div>
+
+  </div>
+
+</div>
+
+<script>
+
+const defaultStages = [
+  {
+    name: "Arrive",
+    customer: "Enters restaurant",
+    emotion: "Ready",
+    process: 3,
+    wait: 0,
+    delay: "",
+    frontstage: "Greets customer",
+    backstage: "Prepares entry zone",
+    systems: "Door traffic counter",
+    role: "Front counter",
+    kpi: "Entry flow clear"
+  },
+  {
+    name: "Decide",
+    customer: "Scans menu",
+    emotion: "Deciding",
+    process: 8,
+    wait: 14,
+    delay: "Menu complexity",
+    frontstage: "Displays menu",
+    backstage: "Updates availability",
+    systems: "Digital menu board",
+    role: "Customer",
+    kpi: "Decision ≤ 30s"
+  },
+  {
+    name: "Order",
+    customer: "Places order",
+    emotion: "Confident",
+    process: 7,
+    wait: 2,
+    delay: "Queue",
+    frontstage: "Confirms order",
+    backstage: "Routes ticket",
+    systems: "POS + KDS",
+    role: "Crew member",
+    kpi: "Order ≤ 10s"
+  },
+  {
+    name: "Pay",
+    customer: "Completes payment",
+    emotion: "Committed",
+    process: 3,
+    wait: 1,
+    delay: "Terminal response",
+    frontstage: "Processes payment",
+    backstage: "Validates transaction",
+    systems: "Payment terminal",
+    role: "Cashier",
+    kpi: "Payment ≤ 5s"
+  },
+  {
+    name: "Wait",
+    customer: "Waits for order",
+    emotion: "Impatient",
+    process: 12,
+    wait: 0,
+    delay: "",
+    frontstage: "Shows order status",
+    backstage: "Stages food",
+    systems: "Kitchen display",
+    role: "Kitchen crew",
+    kpi: "Prep ≤ 15s"
+  },
+  {
+    name: "Collect",
+    customer: "Takes order",
+    emotion: "Relieved",
+    process: 3,
+    wait: 0,
+    delay: "",
+    frontstage: "Calls order number",
+    backstage: "Matches order",
+    systems: "Order status system",
+    role: "Expeditor",
+    kpi: "Handoff ≤ 5s"
+  },
+  {
+    name: "Leave",
+    customer: "Exits restaurant",
+    emotion: "Satisfied",
+    process: 2,
+    wait: 0,
+    delay: "",
+    frontstage: "Thanks customer",
+    backstage: "Closes transaction",
+    systems: "POS closeout",
+    role: "Front counter",
+    kpi: "Receipt issued"
+  }
+];
+
+function createStages() {
+
+  const container = document.getElementById("stages");
+
+  container.innerHTML = "";
+
+  defaultStages.forEach((stage, index) => {
+
+    const html = `
+      <div class="stage">
+
+        <div class="stage-header">
+          <span>
+            <span class="stage-number">
+              ${String(index + 1).padStart(2, "0")}
+            </span>
+            Stage
+          </span>
+        </div>
+
+        <div class="stage-body">
+
+          <div class="field">
+            <label>Stage Name</label>
+            <input data-field="name" value="${stage.name}">
+          </div>
+
+          <div class="field">
+            <label>Customer Action</label>
+            <input data-field="customer" value="${stage.customer}">
+          </div>
+
+          <div class="field">
+            <label>Customer Emotion</label>
+            <input data-field="emotion" value="${stage.emotion}">
+          </div>
+
+          <div class="field">
+            <label>Process Time (seconds)</label>
+            <input data-field="process" type="number" value="${stage.process}">
+          </div>
+
+          <div class="field">
+            <label>Wait Time / Delay (seconds)</label>
+            <input data-field="wait" type="number" value="${stage.wait}">
+          </div>
+
+          <div class="field">
+            <label>Delay Reason</label>
+            <input data-field="delay" value="${stage.delay}">
+          </div>
+
+          <div class="field">
+            <label>Frontstage Action</label>
+            <input data-field="frontstage" value="${stage.frontstage}">
+          </div>
+
+          <div class="field">
+            <label>Backstage Action</label>
+            <input data-field="backstage" value="${stage.backstage}">
+          </div>
+
+          <div class="field">
+            <label>Systems & Processes</label>
+            <input data-field="systems" value="${stage.systems}">
+          </div>
+
+          <div class="field">
+            <label>Role / Department</label>
+            <input data-field="role" value="${stage.role}">
+          </div>
+
+          <div class="field">
+            <label>Success KPI / Metric</label>
+            <input data-field="kpi" value="${stage.kpi}">
+          </div>
+
+        </div>
+
+      </div>
+    `;
+
+    container.insertAdjacentHTML("beforeend", html);
+
+  });
+
+}
+
+function getStages() {
+
+  const stageElements = document.querySelectorAll(".stage");
+
+  return Array.from(stageElements).map(stage => {
+
+    const get = field =>
+      stage.querySelector(`[data-field="${field}"]`).value;
+
+    return {
+      name: get("name"),
+      customer: get("customer"),
+      emotion: get("emotion"),
+      process: Number(get("process")) || 0,
+      wait: Number(get("wait")) || 0,
+      delay: get("delay"),
+      frontstage: get("frontstage"),
+      backstage: get("backstage"),
+      systems: get("systems"),
+      role: get("role"),
+      kpi: get("kpi")
+    };
+
+  });
+
+}
+
+function generateBlueprint() {
+
+  const project =
+    document.getElementById("projectName").value;
+
+  const service =
+    document.getElementById("service").value;
+
+  const target =
+    document.getElementById("target").value;
+
+  const targetTime =
+    Number(document.getElementById("targetTime").value) || 0;
+
+  const stages = getStages();
+
+  document.getElementById("previewProject").textContent = project;
+
+  document.getElementById("previewService").textContent = service;
+
+  document.getElementById("previewTarget").textContent = target;
+
+  document.getElementById("clockLabel").textContent =
+    `⟵ ${targetTime} seconds target clock ⟶`;
+
+  buildTable(stages);
+
+}
+
+function buildTable(stages) {
+
+  const headers = document.getElementById("stageHeaders");
+
+  headers.innerHTML =
+    `<th>Blueprint layer</th>` +
+    stages.map((stage, index) => `
+      <th>
+        <span class="step-num">
+          ${String(index + 1).padStart(2, "0")}
+        </span>
+        <span class="step">${escapeHTML(stage.name)}</span>
+      </th>
+    `).join("");
+
+  const rows = {
+
+    customerActions: stages.map(stage =>
+      `<td><div class="cell">${escapeHTML(stage.customer)}</div></td>`
+    ),
+
+    emotions: stages.map(stage =>
+      `<td><div class="cell emotion">${escapeHTML(stage.emotion)}</div></td>`
+    ),
+
+    processTimes: stages.map(stage =>
+      `<td>
+        <div class="time-cell process">
+          <div class="time-row">
+            <span class="time-number">${stage.process}s</span>
+          </div>
+          <div class="bar-track">
+            <div class="bar" style="width:${stage.process * 4}px"></div>
+          </div>
+        </div>
+      </td>`
+    ),
+
+    waitTimes: stages.map(stage =>
+      `<td>
+        <div class="time-cell wait">
+          <div class="time-row">
+            <span class="time-number ${stage.wait === 0 ? "zero" : ""}">
+              ${stage.wait}s
+            </span>
+          </div>
+          <div class="bar-track">
+            <div class="bar" style="width:${stage.wait * 4}px"></div>
+          </div>
+          ${
+            stage.delay
+              ? `<span class="tag">${escapeHTML(stage.delay)}</span>`
+              : ""
+          }
+        </div>
+      </td>`
+    ),
+
+    frontstage: stages.map(stage =>
+      `<td><div class="cell">${escapeHTML(stage.frontstage)}</div></td>`
+    ),
+
+    backstage: stages.map(stage =>
+      `<td><div class="cell">${escapeHTML(stage.backstage)}</div></td>`
+    ),
+
+    systems: stages.map(stage =>
+      `<td><div class="cell">${escapeHTML(stage.systems)}</div></td>`
+    ),
+
+    roles: stages.map(stage =>
+      `<td><div class="cell">${escapeHTML(stage.role)}</div></td>`
+    ),
+
+    kpis: stages.map(stage =>
+      `<td><div class="cell">${escapeHTML(stage.kpi)}</div></td>`
+    )
+
+  };
+
+  Object.keys(rows).forEach(id => {
+
+    const row =
+      document.getElementById(id);
+
+    if (row) {
+      row.innerHTML = rows[id].join("");
+    }
+
+  });
+
+  const totalProcess =
+    stages.reduce((sum, stage) => sum + stage.process, 0);
+
+  const totalWait =
+    stages.reduce((sum, stage) => sum + stage.wait, 0);
+
+  const totalLead =
+    totalProcess + totalWait;
+
+  document.getElementById("totalProcess").textContent =
+    `${totalProcess}s`;
+
+  document.getElementById("totalWait").textContent =
+    `${totalWait}s`;
+
+  document.getElementById("totalLead").textContent =
+    `${totalLead}s`;
+
+  const targetTime =
+    Number(document.getElementById("targetTime").value) || 0;
+
+  const clockStages = getClockStages(stages);
+
+  const clockTime =
+    clockStages.reduce(
+      (sum, stage) =>
+        sum + stage.process + stage.wait,
+      0
+    );
+
+  if (clockTime <= targetTime) {
+
+    document.getElementById("verdict").textContent =
+      `PASS · ${clockTime}s`;
+
+    document.getElementById("verdictText").textContent =
+      `Clock window is ${targetTime - clockTime}s under the target.`;
+
+  } else {
+
+    document.getElementById("verdict").textContent =
+      `FAIL · ${clockTime}s`;
+
+    document.getElementById("verdictText").textContent =
+      `Clock window exceeds the target by ${clockTime - targetTime}s.`;
+
+  }
+
+  createWasteHotspot(stages);
+
+}
+
+function getClockStages(stages) {
+
+  const names =
+    stages.map(stage => stage.name.toLowerCase());
+
+  const start =
+    names.indexOf("order");
+
+  const end =
+    names.indexOf("collect");
+
+  if (start !== -1 && end !== -1 && end >= start) {
+    return stages.slice(start, end + 1);
+  }
+
+  return stages;
+
+}
+
+function createWasteHotspot(stages) {
+
+  const sorted =
+    [...stages]
+      .filter(stage => stage.wait > 0)
+      .sort((a, b) => b.wait - a.wait);
+
+  if (!sorted.length) {
+
+    document.getElementById("wasteHotspots").textContent =
+      "No waiting time has been identified in the journey.";
+
+    return;
+
+  }
+
+  const largest = sorted[0];
+
+  let text =
+    `${largest.name} carries the largest delay at ${largest.wait}s`;
+
+  if (largest.delay) {
+    text += `, driven by ${largest.delay}`;
+  }
+
+  if (sorted.length > 1) {
+
+    text +=
+      `, followed by ${sorted[1].name} at ${sorted[1].wait}s`;
+
+  }
+
+  text += ".";
+
+  document.getElementById("wasteHotspots").textContent = text;
+
+}
+
+function escapeHTML(value) {
+
+  return String(value)
+    .replace(/&/g, "&amp;")
+    .replace(/</g, "&lt;")
+    .replace(/>/g, "&gt;")
+    .replace(/"/g, "&quot;")
+    .replace(/'/g, "&#039;");
+
+}
+
+createStages();
+
+generateBlueprint();
+
+</script>
+
+</body>
+</html>
