@@ -365,19 +365,47 @@ function generateBlueprint() {
 
 function buildTable() {
 
-  const headers =
-    document.getElementById(
-      "stageHeaders"
-    );
+  const headerRow =
+    document.getElementById("stageHeaders");
 
-  headers.innerHTML =
+  const customerRow =
+    document.getElementById("customerActions");
+
+  const emotionRow =
+    document.getElementById("emotions");
+
+  const processRow =
+    document.getElementById("processTimes");
+
+  const waitRow =
+    document.getElementById("waitTimes");
+
+  const frontstageRow =
+    document.getElementById("frontstage");
+
+  const backstageRow =
+    document.getElementById("backstage");
+
+  const systemsRow =
+    document.getElementById("systems");
+
+  const rolesRow =
+    document.getElementById("roles");
+
+  const kpisRow =
+    document.getElementById("kpis");
+
+
+  // -------------------------
+  // HEADERS
+  // -------------------------
+
+  headerRow.innerHTML =
     `<th>Blueprint layer</th>` +
+    stages.map((stage, index) => {
 
-    stages.map(
-      (stage, index) => `
-
+      return `
         <th>
-
           <span class="step-num">
             ${String(index + 1).padStart(2, "0")}
           </span>
@@ -385,97 +413,117 @@ function buildTable() {
           <span class="step">
             ${escapeHTML(stage.name)}
           </span>
-
         </th>
+      `;
 
-      `
-    ).join("");
+    }).join("");
 
-  document.getElementById(
-    "customerActions"
-  ).innerHTML =
-    stages.map(stage =>
-      `<td>
-        <div class="cell">
-          ${escapeHTML(stage.customer)}
-        </div>
-      </td>`
-    ).join("");
 
-  document.getElementById(
-    "emotions"
-  ).innerHTML =
-    stages.map(stage =>
-      `<td>
-        <div class="cell emotion">
-          ${escapeHTML(stage.emotion)}
-        </div>
-      </td>`
-    ).join("");
+  // -------------------------
+  // CUSTOMER ACTION
+  // -------------------------
 
-  document.getElementById(
-    "processTimes"
-  ).innerHTML =
+  customerRow.innerHTML =
+    `<th>Customer action</th>` +
+
     stages.map(stage => {
-
-      const width =
-        Math.min(
-          stage.process * 4,
-          120
-        );
 
       return `
         <td>
-
-          <div class="time-cell process">
-
-            <div class="time-row">
-              <span class="time-number">
-                ${stage.process}s
-              </span>
-            </div>
-
-            <div class="bar-track">
-
-              <div
-                class="bar"
-                style="width:${width}px">
-              </div>
-
-            </div>
-
+          <div class="cell">
+            ${escapeHTML(stage.customer)}
           </div>
-
         </td>
       `;
 
     }).join("");
 
-  document.getElementById(
-    "waitTimes"
-  ).innerHTML =
-    stages.map(stage => {
 
-      const width =
-        Math.min(
-          stage.wait * 4,
-          120
-        );
+  // -------------------------
+  // CUSTOMER EMOTION
+  // -------------------------
+
+  emotionRow.innerHTML =
+    `<th>Customer emotion</th>` +
+
+    stages.map(stage => {
 
       return `
         <td>
+          <div class="cell emotion">
+            ${escapeHTML(stage.emotion)}
+          </div>
+        </td>
+      `;
 
+    }).join("");
+
+
+  // -------------------------
+  // PROCESS TIME
+  // -------------------------
+
+  processRow.innerHTML =
+    `<th>Process Time</th>` +
+
+    stages.map(stage => {
+
+      const seconds =
+        Number(stage.process) || 0;
+
+      const width =
+        Math.min(seconds * 4, 120);
+
+      return `
+        <td>
+          <div class="time-cell process">
+
+            <div class="time-row">
+              <span class="time-number">
+                ${seconds}s
+              </span>
+            </div>
+
+            <div class="bar-track">
+              <div
+                class="bar"
+                style="width:${width}px">
+              </div>
+            </div>
+
+          </div>
+        </td>
+      `;
+
+    }).join("");
+
+
+  // -------------------------
+  // WAIT TIME
+  // -------------------------
+
+  waitRow.innerHTML =
+    `<th>Wait Time / Delay</th>` +
+
+    stages.map(stage => {
+
+      const seconds =
+        Number(stage.wait) || 0;
+
+      const width =
+        Math.min(seconds * 4, 120);
+
+      return `
+        <td>
           <div class="time-cell wait">
 
             <div class="time-row">
 
               <span class="time-number ${
-                stage.wait === 0
-                  ? "zero"
-                  : ""
+                seconds === 0 ? "zero" : ""
               }">
 
-                ${stage.wait}s
+                ${seconds}s
 
               </span>
 
@@ -501,66 +549,111 @@ function buildTable() {
             }
 
           </div>
-
         </td>
       `;
 
     }).join("");
 
-  document.getElementById(
-    "frontstage"
-  ).innerHTML =
-    stages.map(stage =>
-      `<td>
-        <div class="cell">
-          ${escapeHTML(stage.frontstage)}
-        </div>
-      </td>`
-    ).join("");
 
-  document.getElementById(
-    "backstage"
-  ).innerHTML =
-    stages.map(stage =>
-      `<td>
-        <div class="cell">
-          ${escapeHTML(stage.backstage)}
-        </div>
-      </td>`
-    ).join("");
+  // -------------------------
+  // FRONTSTAGE
+  // -------------------------
 
-  document.getElementById(
-    "systems"
-  ).innerHTML =
-    stages.map(stage =>
-      `<td>
-        <div class="cell">
-          ${escapeHTML(stage.systems)}
-        </div>
-      </td>`
-    ).join("");
+  frontstageRow.innerHTML =
+    `<th>Frontstage actions</th>` +
 
-  document.getElementById(
-    "roles"
-  ).innerHTML =
-    stages.map(stage =>
-      `<td>
-        <div class="cell">
-          ${escapeHTML(stage.role)}
-        </div>
-      </td>`
-    ).join("");
+    stages.map(stage => {
 
-  document.getElementById(
-    "kpis"
-  ).innerHTML =
-    stages.map(stage =>
-      `<td>
-        <div class="cell">
-          ${escapeHTML(stage.kpi)}
-        </div>
-      </td>`
-    ).join("");
+      return `
+        <td>
+          <div class="cell">
+            ${escapeHTML(stage.frontstage)}
+          </div>
+        </td>
+      `;
+
+    }).join("");
+
+
+  // -------------------------
+  // BACKSTAGE
+  // -------------------------
+
+  backstageRow.innerHTML =
+    `<th>Backstage actions</th>` +
+
+    stages.map(stage => {
+
+      return `
+        <td>
+          <div class="cell">
+            ${escapeHTML(stage.backstage)}
+          </div>
+        </td>
+      `;
+
+    }).join("");
+
+
+  // -------------------------
+  // SYSTEMS
+  // -------------------------
+
+  systemsRow.innerHTML =
+    `<th>Systems &amp; Processes</th>` +
+
+    stages.map(stage => {
+
+      return `
+        <td>
+          <div class="cell">
+            ${escapeHTML(stage.systems)}
+          </div>
+        </td>
+      `;
+
+    }).join("");
+
+
+  // -------------------------
+  // ROLE
+  // -------------------------
+
+  rolesRow.innerHTML =
+    `<th>Role / Department</th>` +
+
+    stages.map(stage => {
+
+      return `
+        <td>
+          <div class="cell">
+            ${escapeHTML(stage.role)}
+          </div>
+        </td>
+      `;
+
+    }).join("");
+
+
+  // -------------------------
+  // KPI
+  // -------------------------
+
+  kpisRow.innerHTML =
+    `<th>Success KPI / Metric</th>` +
+
+    stages.map(stage => {
+
+      return `
+        <td>
+          <div class="cell">
+            ${escapeHTML(stage.kpi)}
+          </div>
+        </td>
+      `;
+
+    }).join("");
+
 
   calculateTotals();
 
