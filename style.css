@@ -233,9 +233,9 @@ select:focus {
 table {
   width: 100%;
   border-collapse: collapse;
-  min-width: 950px;
   table-layout: fixed;
 }
+
 
 th,
 td {
